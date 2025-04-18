@@ -58,20 +58,28 @@ if generate:
         qr.make(fit=True)
         img = qr.make_image(fill_color=fill_color, back_color=back_color).convert("RGB")
         
-        # 로고 합성 (선택 사항)
+        # --- 로고 합성 (선택 사항) ---
         if logo_file:
             logo = Image.open(logo_file).convert("RGBA")
+            
+            # 호환 가능한 리샘플링 필터 선택
+            try:
+                resample_filter = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample_filter = Image.LANCZOS
+            
             qr_w, qr_h = img.size
-            factor = 5  # 로고가 QR 코드의 1/5 크기가 되도록
+            factor = 5  # 로고가 QR 코드의 1/5 크기로
             logo_size = (qr_w // factor, qr_h // factor)
-            logo = logo.resize(logo_size, Image.ANTIALIAS)
+            logo = logo.resize(logo_size, resample_filter)
+            
             pos = ((qr_w - logo_size[0]) // 2, (qr_h - logo_size[1]) // 2)
             img.paste(logo, pos, mask=logo)
         
-        # 결과 출력 (use_container_width로 교체)
+        # --- 결과 출력 (use_container_width) ---
         st.image(img, caption="✅ 생성된 QR 코드", use_container_width=True)
         
-        # 다운로드 버튼
+        # --- 다운로드 버튼 ---
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         buffer.seek(0)
